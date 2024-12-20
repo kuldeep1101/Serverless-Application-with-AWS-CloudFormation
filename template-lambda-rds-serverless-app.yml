@@ -77,3 +77,12 @@ Resources:
     Type: "AWS::EC2::EIP"
     Properties:
       Domain: "vpc"
+
+
+Outputs:
+
+  MyLambdaRef:
+    Description: ARN of the IAM Role for Lambda access
+    Value: !GetAtt MyLambdaFunction1.Arn
+    Export:
+      Name: Lambda-ref
