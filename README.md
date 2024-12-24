@@ -139,7 +139,7 @@ Use a REST client (e.g., postman) to send a POST request to the API Gateway endp
 
 **API URL** - https://pn72zqdjkb.execute-api.ap-south-1.amazonaws.com/prod/submit-name
 
-
+[![Watch the video]([https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg](https://github.com/kuldeep1101/Serverless-Application-with-AWS-CloudFormation/blob/03e1a6382af384ddb0c3da0983d33537f52a8bae/Testing%20-%20Serverless%20Application.mp4))](Testing - Serverless Application)
 
 ## Conclusion
 
