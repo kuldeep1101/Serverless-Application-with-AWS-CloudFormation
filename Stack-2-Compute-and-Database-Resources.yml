@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  MySubnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !ImportValue s3-MyVPC1
+        CidrBlock: 10.0.1.0/24
+        AvailabilityZone: ap-south-1a
+
+  MySubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !ImportValue s3-MyVPC1
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: ap-south-1b
+
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue s3-MyVPC1
+      GroupDescription: Allow Lambda access to RDS
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: 0.0.0.0/0
+
+
+  MyDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+      - !Ref MySubnet1
+      - !Ref MySubnet2
+
+
+  MyRDSInstance1:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: db-instance-1
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      MasterUsername: root
+      MasterUserPassword: root8440
+      VPCSecurityGroups:
+        - !GetAtt MySecurityGroup.GroupId
+      DBSubnetGroupName: !Ref MyDBSubnetGroup
+      AvailabilityZone: ap-south-1a
+      DBName: db_instance_sl
+
+
+  MyLambdaFunction1:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: app-lambda-function-1
+      Handler: lambda_function.lambda_handler
+      Role: !ImportValue s3-MyIAMRole
+      Code:
+        S3Bucket: !ImportValue s3-MyBucketSL1
+        S3Key: lambda_function_sl.zip
+      Runtime: python3.9
+      VpcConfig:
+        SubnetIds:
+          - !Ref MySubnet1
+        SecurityGroupIds:
+          - !GetAtt MySecurityGroup.GroupId
+
+  CustomNATGateway:
+    Type: "AWS::EC2::NatGateway"
+    Properties:
+      AllocationId: !GetAtt CustomEIP.AllocationId
+      SubnetId: !Ref MySubnet1
+
+  CustomEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: "vpc"
+
+
+Outputs:
+
+  MyLambdaRef:
+    Description: ARN of the Lambda-function
+    Value: !GetAtt MyLambdaFunction1.Arn
+    Export:
+      Name: Lambda-ref

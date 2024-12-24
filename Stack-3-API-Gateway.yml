@@ -1,0 +1,68 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  MyApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: MyServerlessAppAPI
+
+  SubmitNameResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt MyApiGateway.RootResourceId
+      PathPart: submit-name
+      RestApiId: !Ref MyApiGateway
+
+  SubmitNameMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      ResourceId: !Ref SubmitNameResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS_PROXY
+        Uri: !Sub
+          - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - Region: !Ref "AWS::Region"
+            LambdaArn: !ImportValue Lambda-ref
+      MethodResponses:
+        - StatusCode: 200
+
+  MyLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !ImportValue Lambda-ref
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub
+        arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MyApiGateway}/*/POST/submit-name
+
+  MyApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: SubmitNameMethod
+    Properties:
+      RestApiId: !Ref MyApiGateway
+      StageName: prod
+
+  MyApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      StageName: test
+      RestApiId: !Ref MyApiGateway
+      DeploymentId: !Ref MyApiDeployment
+      MethodSettings:
+        - ResourcePath: "/submit-name"
+          HttpMethod: POST
+          LoggingLevel: INFO
+          DataTraceEnabled: true
+          MetricsEnabled: true
+          ThrottlingBurstLimit: 100
+          ThrottlingRateLimit: 50
+
+Outputs:
+  ApiUrl:
+    Description: "The URL of the API Gateway endpoint"
+    Value: !Sub "https://${MyApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/submit-name"
