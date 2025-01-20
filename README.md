@@ -3,6 +3,10 @@ Serverless Application: Greeting App with AWS CloudFormation
 
 This document provides detailed documentation for the creation of a serverless application using AWS services. It leverages Infrastructure as Code (IaC) principles to provision resources through CloudFormation. The application takes a user’s name as input and responds with a greeting message. The architecture leverages a variety of AWS components including VPC, IAM roles, Lambda, S3, RDS, API Gateway, and others.
 
+### Application Architecture-
+
+![Serverless Application Architecture](https://github.com/user-attachments/assets/3e17656c-675d-4480-977c-55e4a5093ffe)
+
 
 ## Project Breakdown
 
